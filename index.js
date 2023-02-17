@@ -1,13 +1,25 @@
 const express = require("express");
-const dotenv = require("dotenv");
-
-dotenv.config({ path: "./.env" });
-
+require("dotenv").config();
 const app = express();
+const cors = require("cors");
+const dbConnection = require("./db");
+const userRoutes = require("./routes/users");
+const authRoutes = require("./routes/auth");
+
+// database connection
+dbConnection();
+
+// middlewares
+app.use(express.json());
+app.use(cors());
+
+// routes
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-  res.send("<h1>Hello brother</h1>");
+  res.send("<h1>Hello user</h1>");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Listening to port ${PORT}`));
