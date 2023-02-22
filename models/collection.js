@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const CollectionSchema = new mongoose.Schema({
-  collectionImg: { type: String },
+  collectionImg: { type: mongoose.Schema.Types.Mixed },
   collectionName: { type: String, required: true },
   customFields: [mongoose.Schema.Types.Mixed],
   description: { type: String, required: true },
