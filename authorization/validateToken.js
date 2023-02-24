@@ -11,7 +11,7 @@ const validateToken = (req, res, next) => {
         return next();
       }
     } catch (error) {
-      return res.status(401).send({ message: "User is not authorized" });
+      return res.status(401).send({ message: "User is not authorized, please log in" });
     }
   }
 };
