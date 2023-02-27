@@ -3,7 +3,7 @@ const validateToken = require("../authorization/validateToken");
 const { User } = require("../models/user");
 
 router.get("/users", validateToken, (req, res) => {
-  const { _id, email, role } = req.authenticated;
+  const { role } = req.authenticated;
 
   if (role === "Admin") {
     User.find({}, (err, users) => {
@@ -17,7 +17,7 @@ router.get("/users", validateToken, (req, res) => {
 });
 
 router.put("/users", validateToken, (req, res) => {
-  const { _id, email, role } = req.authenticated;
+  const { _id, role } = req.authenticated;
   if (role === "Admin") {
     const criteria = {
       _id: { $in: req.query.ids },
@@ -39,7 +39,7 @@ router.put("/users", validateToken, (req, res) => {
 });
 
 router.delete("/users", validateToken, (req, res) => {
-  const { _id, email, role } = req.authenticated;
+  const { _id, role } = req.authenticated;
   if (role === "Admin") {
     const criteria = {
       _id: { $in: req.query.ids },

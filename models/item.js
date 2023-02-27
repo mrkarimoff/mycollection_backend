@@ -19,6 +19,7 @@ const ItemSchema = new mongoose.Schema({
   textarea1: { type: String },
   textarea2: { type: String },
   textarea3: { type: String },
+  itemDate: { type: String },
 });
 
 const Item = mongoose.model("item", ItemSchema);

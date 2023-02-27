@@ -6,7 +6,7 @@ const namedCustomfields = (customFields) => {
   let textareFields = [];
   let orderedCustomFields = [];
 
-  customFields.forEach((item, index) => {
+  customFields.forEach((item) => {
     if (item.type === "text") {
       textFields.push({ ...item, name: `text${textFields.length + 1}` });
     }

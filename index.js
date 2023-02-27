@@ -8,6 +8,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const collectionRoutes = require("./routes/collections");
 const itemRoutes = require("./routes/items");
+const searchRoutes = require("./routes/search");
 
 // database connection
 dbConnection();
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", collectionRoutes);
 app.use("/api", itemRoutes);
+app.use("/api", searchRoutes);
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello user</h1>");
