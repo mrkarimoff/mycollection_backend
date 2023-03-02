@@ -4,7 +4,9 @@ const validateToken = require("../authorization/validateToken");
 const Collection = require("../models/collection");
 const Tag = require("../models/tag");
 const { verify } = require("jsonwebtoken");
+const { User } = require("../models/user");
 
+// get collection data (customFields)
 router.get("/collections/:colId/data", (req, res) => {
   if (req?.headers?.authorization) {
     const accessToken = req.headers.authorization.split(" ")[1];
@@ -35,6 +37,7 @@ router.get("/collections/:colId/data", (req, res) => {
   }
 });
 
+// get all tags
 router.get("/tags", (_, res) => {
   try {
     Tag.find({}, (err, tags) => {
@@ -46,6 +49,7 @@ router.get("/tags", (_, res) => {
   }
 });
 
+// post item
 router.post("/items", validateToken, async (req, res) => {
   const itemData = {
     ...req.body,
@@ -65,6 +69,7 @@ router.post("/items", validateToken, async (req, res) => {
     textarea2: req.body.textarea2 ?? null,
     textarea3: req.body.textarea3 ?? null,
     itemDate: new Date().toLocaleString("en-US"),
+    likes: [],
   };
 
   try {
@@ -81,6 +86,7 @@ router.post("/items", validateToken, async (req, res) => {
   }
 });
 
+// get specific collection's items
 router.get("/collections/:colId/items", (req, res) => {
   try {
     Item.find({ collectionId: req.params.colId }, (err, items) => {
@@ -92,6 +98,7 @@ router.get("/collections/:colId/items", (req, res) => {
   }
 });
 
+// get recent items
 router.get("/items/recent", async (_, res) => {
   try {
     const recentItems = await Item.find().sort({ _id: -1 }).limit(7);
@@ -101,6 +108,7 @@ router.get("/items/recent", async (_, res) => {
   }
 });
 
+// get single item
 router.get("/items/:itemId", (req, res) => {
   try {
     Item.findOne({ _id: req.params.itemId }, async (err, item) => {
@@ -113,13 +121,14 @@ router.get("/items/:itemId", (req, res) => {
       }));
       itemEntities.push({ label: "itemName", value: item.itemName });
       itemEntities.push({ label: "tags", value: item.tags });
-      res.status(200).send(itemEntities);
+      res.status(200).send({ itemEntities, likes: item.likes });
     });
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
 });
 
+// delete item
 router.delete("/items/:itemId", validateToken, (req, res) => {
   try {
     Item.findOneAndDelete({ _id: req.params.itemId }, (err, _) => {
@@ -131,6 +140,7 @@ router.delete("/items/:itemId", validateToken, (req, res) => {
   }
 });
 
+// update item
 router.put("/items/:itemId", validateToken, (req, res) => {
   try {
     req.body.tags.map(async (tag) => {
@@ -148,24 +158,60 @@ router.put("/items/:itemId", validateToken, (req, res) => {
   }
 });
 
-module.exports = router;
+// Update Likes
+router.put("/items/likes/:itemId", validateToken, async (req, res) => {
+  const { _id } = req.authenticated;
 
-// Possible change
-
-/*
-router.get("/collections/:colId/data", validateToken, (req, res) => {
-  const { _id, role } = req.authenticated;
   try {
-    Collection.findOne({ _id: req.params.colId }, (err, collection) => {
-      if (err) return res.status(500).send({ message: "Something happened in the Database" });
-      res.status(200).send({
-        customFields: collection.customFields,
-        collectionName: collection.collectionName,
-        canManage: collection.userId === _id || role==="Admin",
-      });
-    });
+    const item = await Item.findById(req.params.itemId);
+
+    // check if already liked
+    if (item?.likes.filter((like) => like.userId === _id).length > 0) {
+      const removeIndex = item?.likes.map((like) => like.userId).indexOf(_id);
+      item?.likes.splice(removeIndex, 1);
+    } else {
+      item?.likes.unshift({ userId: _id });
+    }
+
+    await item.save();
+    res.status(200).send(item.likes);
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
-}) 
- */
+});
+
+// post comment
+router.post("/items/comment/:itemId", validateToken, async (req, res) => {
+  const { _id } = req.authenticated;
+
+  try {
+    const user = await User.findById(_id);
+    const item = await Item.findById(req.params.itemId);
+
+    const newComment = {
+      username: user?.username,
+      comment: req.body.comment,
+      userId: user._id,
+      date: new Date(),
+    };
+    item?.comments.push(newComment);
+    await item?.save();
+    res.status(200).send({ message: "Commented successfuly" });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+// get comments
+router.get("/items/:itemId/comments", validateToken, async (req, res) => {
+  const { _id } = req.authenticated;
+
+  try {
+    const item = await Item.findById(req.params.itemId);
+    res.status(200).send({ comments: item?.comments, userId: _id });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+module.exports = router;

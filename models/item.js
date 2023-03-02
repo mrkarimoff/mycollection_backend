@@ -20,6 +20,10 @@ const ItemSchema = new mongoose.Schema({
   textarea2: { type: String },
   textarea3: { type: String },
   itemDate: { type: String },
+  likes: { type: [{ userId: String }] },
+  comments: {
+    type: [{ username: String, comment: String, userId: String, date: String }],
+  },
 });
 
 const Item = mongoose.model("item", ItemSchema);
